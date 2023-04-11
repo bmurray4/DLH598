@@ -4,9 +4,10 @@ import pyarrow as pa
 import datetime
 import random
 import os, psutil
-from data_generator.utils import round_up_by_ws
+# from data_generator.utils import round_up_by_ws
 
-
+def round_up_by_ws(num, ws):
+    return -((-num)//ws)*ws
 
 def df_to_numpy(merged_df, min_seq_len, max_seq_len, signal_list, missingness_threshold=0.4):
     print('min_seq_len: ', min_seq_len)
