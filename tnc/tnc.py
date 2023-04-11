@@ -1033,7 +1033,7 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
         window_size = learn_encoder_hyper_params['window_size']
         length_of_hour = int((60*60)/300) # 60 seconds * 60 / 300 (which is num seconds in 5 min)
         
-        path = '../DONTCOMMITdata/hirid_numpy'
+        path = '../gdrive/MyDrive/hirid_numpy'
         signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
         sliding_gap = 1
         
