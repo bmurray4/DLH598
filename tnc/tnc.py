@@ -800,7 +800,7 @@ def learn_encoder(data_maps, encoder_type, encoder_hyper_params, pretrain_hyper_
         best_acc = 0
         best_loss = np.inf
         if not os.path.exists('../ckpt/%s'%data_type):
-            os.mkdir('../ckpt/%s'%data_type)
+            os.makedirs('../ckpt/%s'%data_type)
         epoch_start = 0
         if cont:
             if os.path.exists('../ckpt/%s/%s_checkpoint_%d.tar'%(data_type, UNIQUE_NAME, cv)): # i.e. a checkpoint *has* been saved for this config/cv
@@ -914,7 +914,7 @@ def learn_encoder(data_maps, encoder_type, encoder_hyper_params, pretrain_hyper_
             losses.append(best_loss)
             # Save performance plots
             if not os.path.exists('../DONTCOMMITplots/%s/%s'%(data_type, UNIQUE_ID)):
-                os.mkdir('../DONTCOMMITplots/%s/%s'%(data_type, UNIQUE_ID))
+                os.makedirs('../DONTCOMMITplots/%s/%s'%(data_type, UNIQUE_ID))
 
             train_loss = [t[0] for t in performance]
             validation_loss = [t[1] for t in performance]
