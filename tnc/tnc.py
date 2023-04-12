@@ -1451,7 +1451,15 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
             alluvial_dict = {}
             print('pos_encoding_mask shape: ', pos_encoding_mask.shape)
             print('neg_encoding_mask shape: ', neg_encoding_mask.shape)
-            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask])
+            # BUG right here
+            # position 0 is the only that can be different.
+            # pos_encoding_mask shape:  torch.Size([35, 24])
+            # neg_encoding_mask shape:  torch.Size([175, 96])
+            
+            #ERROR HERE
+            # encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask])
+
+            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask[:,pos_encoding_mask.shape[1]]])
             for cluster_name in range(clustering_model.n_clusters()):
                 alluvial_dict['Cluster %d'%cluster_name] = {}
 
