@@ -234,6 +234,7 @@ def plot_heatmap(sample, encodings, cluster_labels, risk_scores, normalization_s
         f.set_figheight(num_features*7)
         f.set_figwidth(23)
         for feat in range(num_features):
+            print(sample_clone[0][feat])
             sns.lineplot(np.arange(seq_len), sample_clone[0][feat], ax=axs[feat])
 
     for i in range(len(signal_list)):

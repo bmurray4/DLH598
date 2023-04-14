@@ -1623,7 +1623,7 @@ class CausalCNNEncoder(torch.nn.Module):
         
         Returns a tensor of shape (num_samples, seq_len/winow_size, encoding_size)'''
         assert x.shape[-1] % self.window_size == 0
-        if len(tuple(x.shape)) == 3 and x.shape[1] == 2: # If a 3D tensor with maps is passed in, add a new dimension of size 1 to make it a batch of size 1
+        if len(tuple(x.shape)) == 3 and x.shape[0] == 2: # If a 3D tensor with maps is passed in, add a new dimension of size 1 to make it a batch of size 1
             x = torch.unsqueeze(x, 0)
 
         if sliding_gap:

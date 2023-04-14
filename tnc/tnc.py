@@ -1459,16 +1459,19 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
             #ERROR HERE
             # encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask])
 
-            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask[:,pos_encoding_mask.shape[1]]])
-            for cluster_name in range(clustering_model.n_clusters()):
+            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask[:,:pos_encoding_mask.shape[1]]])
+            for cluster_name in range(clustering_model.n_clusters):
                 alluvial_dict['Cluster %d'%cluster_name] = {}
-
-                alluvial_dict[cluster_name] = None
+                cluster_name = str(cluster_name)
+                alluvial_dict[cluster_name] = {}
                 num_to_skip = 0
                 for i in range(len(apache_for_alluvial)):
                     num_valid = len(torch.where(encoding_mask[i] != -1)[0])
-                    count = len(torch.where(clustering_model.labels_[num_to_skip: num_to_skip + num_valid]==cluster_name)[0])
-                    apache_group = apache_for_alluvial[i]
+                    try : 
+                        count = len(torch.where(torch.tensor(clustering_model.labels_[num_to_skip: num_to_skip + num_valid]==cluster_name)[0]))
+                    except:
+                        count=0
+                    apache_group = torch.tensor(apache_for_alluvial[i],dtype=torch.int32)
                     apache_name = apache_names[apache_group]
                     if apache_name not in alluvial_dict[cluster_name]:
                         alluvial_dict[cluster_name][apache_name] = count
@@ -1576,11 +1579,12 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
 
 
             # Plot heatmap and trajectory scatter plot
+            # BUG ERROR plot Heat map not working
             sample = train_mixed_data_maps[ind].cpu().numpy()
-            plot_heatmap(sample=sample, encodings=encodings, cluster_labels=cluster_labels, risk_scores=risk_scores_over_time, normalization_specs=normalization_specs, path='../DONTCOMMITplots/', 
-            hm_file_name='%s/%s/%s_%s_trajectory_hm_%d.pdf'%(data_type, UNIQUE_ID, UNIQUE_NAME, 'positive_sample' if plot_index < num_positive_plotted else 'negative_sample', plot_index), 
-            risk_plot_title='Risk Score for %s Sample'%('Negative' if plot_index >= num_positive_plotted else 'Positive'),
-            signal_list=signal_list, length_of_hour=length_of_hour, window_size=window_size)
+            # plot_heatmap(sample=sample, encodings=encodings, cluster_labels=cluster_labels, risk_scores=risk_scores_over_time, normalization_specs=normalization_specs, path='../DONTCOMMITplots/', 
+            # hm_file_name='%s/%s/%s_%s_trajectory_hm_%d.pdf'%(data_type, UNIQUE_ID, UNIQUE_NAME, 'positive_sample' if plot_index < num_positive_plotted else 'negative_sample', plot_index), 
+            # risk_plot_title='Risk Score for %s Sample'%('Negative' if plot_index >= num_positive_plotted else 'Positive'),
+            # signal_list=signal_list, length_of_hour=length_of_hour, window_size=window_size)
             # encodings, path, pca_file_name):
             if data_type == "ICU":
                 plot_pca_trajectory(encodings=encodings_for_rnn.reshape(-1, encodings_for_rnn.shape[-1]), path='../DONTCOMMITplots/', 
