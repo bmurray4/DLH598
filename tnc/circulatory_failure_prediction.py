@@ -1,7 +1,7 @@
 import torch
 import numpy as np
-from tnc.utils import plot_pca_trajectory_binned, plot_tsne_trajectory_binned, dim_reduction, plot_heatmap_subset_signals_with_risk, plot_pca_trajectory, detect_incr_loss
-from tnc.models import CausalCNNEncoder, RnnPredictor
+from utils import plot_pca_trajectory_binned, plot_tsne_trajectory_binned, dim_reduction, plot_heatmap_subset_signals_with_risk, plot_pca_trajectory, detect_incr_loss
+from models import CausalCNNEncoder, RnnPredictor
 import os
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report
 import matplotlib.pyplot as plt
@@ -55,7 +55,7 @@ def linear_classifier_epoch_run(dataset, train, classifier, class_weights, optim
     
     return epoch_predictions, epoch_losses, epoch_labels
 
-def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, classifier_input_size, baseline_type, encoder, window_size, class_weights, target_names, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name=""):
+def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, classifier_input_size, baseline_type, encoder, window_size, class_weights, target_names, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path='../../ckpt',  plt_path="../DONTCOMMITplots", classifier_name=""):
     '''
     Trains a classifier to predict positive events in samples. 
     X_train is of shape (num_train_samples, 2, num_features, seq_len)
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     print('Cutting off last 3 hrs of data')
     truncate_amt = 36
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    data_path = '../DONTCOMMITdata/hirid_numpy'
+    data_path = '../../gdrive/MyDrive/hirid_numpy'
     train_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
     TEST_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
 
@@ -280,7 +280,8 @@ if __name__ == '__main__':
 
     train_circulatory_PIDs = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_PIDs.npy'))).float()
     TEST_circulatory_PIDs = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_PIDs.npy'))).float()
-    
+    if not os.path.exists('./DONTCOMMITplots/HiRID_circulatory_classification'):
+        os.makedirs('./DONTCOMMITplots/HiRID_circulatory_classification')
     
     random.seed(100)
     if encoder_type == 'TNC_ICU':
@@ -395,7 +396,7 @@ if __name__ == '__main__':
                             X_validation=train_circulatory_data_maps, y_validation=y_train,
                             X_TEST=TEST_circulatory_data_maps, y_TEST=y_TEST, 
                             classifier_input_size=classifier_input_size, baseline_type=encoder_type, encoder=encoder, window_size=12, 
-                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='./ckpt', 
+                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='../../ckpt', 
                             plt_path='./DONTCOMMITplots/HiRID_circulatory_classification', 
                             classifier_name='circulatory_classifier', class_weights=class_weights, return_models=True, data_type='HiRID')
     

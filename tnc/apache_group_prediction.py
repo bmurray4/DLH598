@@ -1,7 +1,7 @@
 import torch
 import random
-from tnc.models import CausalCNNEncoder, RnnPredictor
-from tnc.utils import dim_reduction, detect_incr_loss
+from models import CausalCNNEncoder, RnnPredictor
+from utils import dim_reduction, detect_incr_loss
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -362,7 +362,7 @@ def apache_prediction(encoder, encoder_cv, data_path, device, encoder_type):
     train_linear_classifier(X_train=train_first_24_hrs_data_maps, y_train=train_Apache_Groups, 
     X_validation=train_first_24_hrs_data_maps, y_validation=train_Apache_Groups, # We don't optimize hyper parameters so just train and TEST is used.
     X_TEST=TEST_first_24_hrs_data_maps, y_TEST=TEST_Apache_Groups, encoding_size=encoder.pruned_encoding_size,
-    encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='./ckpt', plt_path='./DONTCOMMITplots/HiRID_apache_classification', 
+    encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='../../ckpt', plt_path='./DONTCOMMITplots/HiRID_apache_classification', 
     classifier_name='apache_classifier', class_weights=class_weights, device=device, lr_list = [.002],
     weight_decay_list = [.0005], n_epochs_list = [200], encoder_type=encoder_type)
 
@@ -371,6 +371,7 @@ def apache_prediction(encoder, encoder_cv, data_path, device, encoder_type):
 
 
 if __name__ == '__main__':
+    
     parser = argparse.ArgumentParser(description='Run TNC')
     parser.add_argument('--checkpoint_file', type=str, default=None)
     parser.add_argument('--encoder_type', type=str, default=None)
@@ -382,13 +383,15 @@ if __name__ == '__main__':
     checkpoint = torch.load(checkpoint_file)
     print('Checkpoint: ', checkpoint_file)
     encoder_cv = 0
+    if not os.path.exists('./DONTCOMMITplots/HiRID_apache_classification'):
+        os.makedirs('./DONTCOMMITplots/HiRID_apache_classification')
     if encoder_type == 'TNC_ICU':
         encoder = CausalCNNEncoder(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
     elif encoder_type == 'TNC':
         encoder = CausalCNNEncoder(in_channels=18, channels=4, depth=1, reduced_size=2, encoding_size=6, kernel_size=2, window_size=12, device=device)
     encoder.load_state_dict(checkpoint['encoder_state_dict'])
-    
-    data_path = '../DONTCOMMITdata/hirid_numpy'
+
+    data_path = '../../gdrive/MyDrive/hirid_numpy'
     encoder.pruning_mask = checkpoint['pruning_mask']
     encoder.pruned_encoding_size = int(torch.sum(encoder.pruning_mask))
     print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)

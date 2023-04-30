@@ -14,8 +14,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
 #from tnc.tnc import train_linear_classifier
 
-from tnc.models import Chomp1d, SqueezeChannels, CausalConvolutionBlock, CausalCNN, RnnPredictor, LinearClassifier
-from tnc.utils import plot_distribution, model_distribution
+from models import Chomp1d, SqueezeChannels, CausalConvolutionBlock, CausalCNN, RnnPredictor, LinearClassifier
+from utils import plot_distribution, model_distribution
 #from tnc.tnc import linear_classifier_epoch_run 
 #from tnc.evaluations import ClassificationPerformanceExperiment, WFClassificationExperiment
 from statsmodels.tsa import stattools
@@ -606,20 +606,20 @@ def learn_encoder(x, window_size, data, encoding_size, lr=0.001, decay=0, n_epoc
                     'encoder_state_dict': encoder.state_dict()
                 }
                 best_loss = epoch_loss_test
-                torch.save(state, './ckpt/%s_trip/checkpoint_%d.pth.tar' %(data, cv))
+                torch.save(state, 'ckpt/%s_trip/checkpoint_%d.pth.tar' %(data, cv))
         plt.figure()
         plt.plot(np.arange(n_epochs), train_loss, label="Train")
         plt.plot(np.arange(n_epochs), test_loss, label="Test")
         plt.title("Loss")
         plt.legend()
-        plt.savefig(os.path.join("./DONTCOMMITplots/%s_trip/loss_%d.pdf"%(data,cv)))
+        plt.savefig(os.path.join("DONTCOMMITplots/%s_trip/loss_%d.pdf"%(data,cv)))
 
 
 def main(is_train, data_type, lr, cv):
-    if not os.path.exists("./DONTCOMMITplots"):
-        os.mkdir("./DONTCOMMITplots")
-    if not os.path.exists("./ckpt/"):
-        os.mkdir("./ckpt/")
+    if not os.path.exists("DONTCOMMITplots/HiRID_trip"):
+        os.mkdir("./DONTCOMMITplots/HiRID_trip")
+    if not os.path.exists("./ckpt/HiRID_trip"):
+        os.mkdir("./ckpt/HiRID_trip")
 
     if data_type == 'ICU':
         length_of_hour = int(60*60/5)
@@ -649,7 +649,7 @@ def main(is_train, data_type, lr, cv):
         lr = 1e-3
         length_of_hour = int((60*60)/300) # 60 seconds * 60 / 300 (which is num seconds in 5 min)
         pos_sample_name = 'mortality'
-        path = '../DONTCOMMITdata/hirid_numpy'
+        path = '../../gdrive/MyDrive/hirid_numpy'
         signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
         sliding_gap = 1
         pre_positive_window = int((24*60*60)/300) # 24 hrs

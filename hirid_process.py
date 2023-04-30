@@ -371,8 +371,8 @@ if __name__ == '__main__':
     process = psutil.Process(os.getpid())
     signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
 
-    process_mortality = True     # process and save the mortality data
-    process_circulatory = False  # process and save the circulatory failure data. You may want to do one at a time due to potential memory constraints.
+    process_mortality = False     # process and save the mortality data
+    process_circulatory = True  # process and save the circulatory failure data. You may want to do one at a time due to potential memory constraints.
     
 
     if process_mortality:
@@ -571,7 +571,7 @@ if __name__ == '__main__':
         del TEST_first_24_hrs_data_maps
         del train_first_24_hrs_data_maps
     
-    elif process_circulatory
+    elif process_circulatory:
 
         print('Moving on to circulatory failure data')
 
@@ -583,7 +583,7 @@ if __name__ == '__main__':
         for part in range(250):
             print("Raw Part:")
             print(part)
-            df = pd.read_parquet('DONTCOMMITdata/hirid/1.1.1/raw_stage/observation_tables/parquet/part-%d.parquet'%part)
+            df = pd.read_parquet('../TRACE/DONTCOMMITdata/hirid/1.1.1/raw_stage/observation_tables/parquet/part-%d.parquet'%part)
 
             for patient_data in df.groupby('patientid'):
                 patientid, patient_data = patient_data
@@ -598,7 +598,7 @@ if __name__ == '__main__':
         for part in range(250):
             print("Pharma Part:")
             print(part)
-            df = pd.read_parquet('DONTCOMMITdata/hirid/1.1.1/raw_stage/pharma_records/parquet/part-%d.parquet'%part)
+            df = pd.read_parquet('../TRACE/DONTCOMMITdata/hirid/1.1.1/raw_stage/pharma_records/parquet/part-%d.parquet'%part)
             
             for patient_data in df.groupby('patientid'):
                 patientid, patient_data = patient_data
@@ -613,7 +613,7 @@ if __name__ == '__main__':
 
         dfs = []
         for part in range(0, 250):
-            df = pd.read_parquet('DONTCOMMITdata/hirid/1.1.1/imputed_stage/imputed_stage_parquet/parquet/part-%d.parquet'%part)
+            df = pd.read_parquet('../TRACE/DONTCOMMITdata/hirid/1.1.1/imputed_stage/imputed_stage_parquet/parquet/part-%d.parquet'%part)
             dfs.append(df)
 
         print('=================')
@@ -624,7 +624,7 @@ if __name__ == '__main__':
         print('circulatory_labels shape: ', circulatory_labels.shape)
         print('circulatory_PIDs shape: ', circulatory_PIDs.shape)
 
-        normalization_specs = np.load('DONTCOMMITdata/hirid_numpy/normalization_specs.npy')
+        normalization_specs = np.load('../gdrive/MyDrive/hirid_numpy/normalization_specs.npy')
         for feature in range(normalization_specs.shape[1]):
             train_signal_mean = normalization_specs[0, feature]
             train_signal_std = normalization_specs[1, feature]
@@ -646,13 +646,13 @@ if __name__ == '__main__':
         TEST_circulatory_labels = circulatory_labels[n_train:]
         TEST_circulatory_PIDs = circulatory_PIDs[n_train:]
 
-        np.save('DONTCOMMITdata/hirid_numpy/train_circulatory_data_maps.npy', train_circulatory_data_maps)
-        np.save('DONTCOMMITdata/hirid_numpy/train_circulatory_labels.npy', train_circulatory_labels)
-        np.save('DONTCOMMITdata/hirid_numpy/train_circulatory_PIDs.npy', train_circulatory_PIDs)
+        np.save('../gdrive/MyDrive/hirid_numpy/train_circulatory_data_maps.npy', train_circulatory_data_maps)
+        np.save('../gdrive/MyDrive/hirid_numpy/train_circulatory_labels.npy', train_circulatory_labels)
+        np.save('../gdrive/MyDrive/hirid_numpy/train_circulatory_PIDs.npy', train_circulatory_PIDs)
 
-        np.save('DONTCOMMITdata/hirid_numpy/TEST_circulatory_data_maps.npy', TEST_circulatory_data_maps)
-        np.save('DONTCOMMITdata/hirid_numpy/TEST_circulatory_labels.npy', TEST_circulatory_labels)
-        np.save('DONTCOMMITdata/hirid_numpy/TEST_circulatory_PIDs.npy', TEST_circulatory_PIDs)
+        np.save('../gdrive/MyDrive/hirid_numpy/TEST_circulatory_data_maps.npy', TEST_circulatory_data_maps)
+        np.save('../gdrive/MyDrive/hirid_numpy/TEST_circulatory_labels.npy', TEST_circulatory_labels)
+        np.save('../gdrive/MyDrive/hirid_numpy/TEST_circulatory_PIDs.npy', TEST_circulatory_PIDs)
 
         print('Memory Usage 8:')
         print(process.memory_info().rss/1e9, 'GB')

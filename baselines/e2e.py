@@ -9,7 +9,7 @@ import seaborn as sns
 sns.set()
 
 
-from tnc.models import CausalCNNEncoder, LinearClassifier, RnnPredictor
+from models import CausalCNNEncoder, LinearClassifier, RnnPredictor
 from sklearn.metrics import roc_auc_score, average_precision_score, classification_report
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -20,7 +20,7 @@ def main(data_type, n_cv):
         random.seed(111*cv+2)
         if data_type == 'HiRID':
             window_size = 12
-            path = '../DONTCOMMITdata/hirid_numpy/'
+            path = '../../gdrive/MyDrive/hirid_numpy/'
             pos_sample_name = 'Mortality'
 
             TEST_mixed_data_maps = torch.from_numpy(np.load(os.path.join(path, 'TEST_mortality_data_maps.npy'))).float()
@@ -123,7 +123,7 @@ def main(data_type, n_cv):
                     'auc': valid_auc
                 }
                 if not os.path.exists('../ckpt/baselines/'):
-                    os.mkdir('../ckpt/baselines/')
+                    os.makedirs('../ckpt/baselines/')
                 torch.save(state, '../ckpt/baselines/e2e%s_%d.pth.tar'%(data_type, cv))
 
         # Plot loss
@@ -131,7 +131,7 @@ def main(data_type, n_cv):
         plt.plot(train_loss_trend, label='Train loss')
         plt.plot(valid_loss_trend, label='Validation loss')
         plt.legend()
-        plt.savefig('../DONTCOMMITplots/%s_e2e/e2e%s_%d.pdf'%(data_type, data_type, cv))
+        plt.savefig('DONTCOMMITplots/%s_e2e/e2e%s_%d.pdf'%(data_type, data_type, cv))
 
         test_epoch_losses, test_pred_all, test_y_all = epoch_run(test_loader, classifier, encoder, window_size=window_size, optimizer=optimizer, train=False, num_pre_positive_encodings=None)
         
@@ -247,5 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('--data', type=str, default='ICU')
     parser.add_argument('--cv', type=int, default=3)
     args = parser.parse_args()
+    if not os.path.exists("DONTCOMMITplots/HiRID_e2e/"):
+        os.makedirs("DONTCOMMITplots/HiRID_e2e/")
 
     main(args.data, args.cv)

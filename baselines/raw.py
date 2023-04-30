@@ -7,18 +7,18 @@ import matplotlib.pyplot as plt
 import seaborn as sns; sns.set()
 import argparse
 
-from tnc.models import Chomp1d, SqueezeChannels, CausalConvolutionBlock, CausalCNN
-from tnc.utils import plot_distribution, model_distribution
-from baselines.triplet_loss import train_linear_classifier, linear_classifier_epoch_run
+from models import Chomp1d, SqueezeChannels, CausalConvolutionBlock, CausalCNN
+from utils import plot_distribution, model_distribution
+from triplet_loss import train_linear_classifier, linear_classifier_epoch_run
 #from tnc.tnc import linear_classifier_epoch_run
 #from tnc.evaluations import ClassificationPerformanceExperiment, WFClassificationExperiment
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def main(data_type, lr,  cv):
-    if not os.path.exists("./DONTCOMMITplots"):
-        os.mkdir("./DONTCOMMITplots")
-    if not os.path.exists("./ckpt/"):
-        os.mkdir("./ckpt/")
+    if not os.path.exists("./DONTCOMMITplots/HiRID_e2e/"):
+        os.makedirs("./DONTCOMMITplots/HiRID_e2e/")
+    if not os.path.exists("./ckpt//HiRID_e2e/"):
+        os.makedirs("./ckpt/HiRID_e2e/")
 
     if data_type == 'ICU':
         length_of_hour = int(60*60/5)
@@ -46,7 +46,7 @@ def main(data_type, lr,  cv):
         window_size = 8
         length_of_hour = int((60*60)/300) # 60 seconds * 60 / 300 (which is num seconds in 5 min)
         pos_sample_name = 'mortality'
-        path = '../DONTCOMMITdata/hirid_numpy'
+        path = '../../gdrive/MyDrive/hirid_numpy'
         signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
         sliding_gap = 1
         pre_positive_window = int((24*60*60)/300) # 24 hrs
