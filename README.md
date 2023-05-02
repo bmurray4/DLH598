@@ -67,19 +67,36 @@ python -u -m e2e --data HiRID
 ### TRACE
 ### TNC
 ### E2E
+Changing your working directory to `tnc` folder,
+```
+cd ./DLH598/tnc
+```
+
+Run the code in `e2e_apache_group_prediction.py`,
+```
+python -u -m e2e_apache_group_prediction
+```
 
 ## Circulatory Failure
 
 ### TRACE
 ### TNC
 ### E2E
+Changing your working directory to `tnc` folder,
+```
+cd ./DLH598/tnc
+```
 
+Run the code in `e2e_circulatory_failure_prediction.py`,
+```
+python -u -m e2e_circulatory_failure_prediction
+```
 
 
 
 # Results
 
-#GitHub repo
+# GitHub repo
 The original paper's code can be accessed from this [GitHub Link](https://github.com/Addison-Weatherhead/TRACE).
 
 # Citation

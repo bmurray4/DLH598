@@ -79,6 +79,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
             for n_epochs in n_epochs_list:
                 cv_auroc = []
                 cv_auprc = []
+                cv_accuracy = []
                 for cv in range(3):
                     (unique, counts) = np.unique(y_train.cpu(), return_counts=True)
                     n_classes = len(unique)
@@ -196,12 +197,13 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
                     
                     # Plot Loss curves
                     plt.figure()
-                    plt.plot(np.arange(1, n_epochs + 1), train_losses, label="Train")
-                    plt.plot(np.arange(1, n_epochs + 1), valid_losses, label="Validation")
+                    plt.plot(np.arange(1, len(train_losses) + 1), train_losses, label="Train")
+                    plt.plot(np.arange(1, len(train_losses) + 1), valid_losses, label="Validation")
                     plt.title("Loss")
                     plt.legend()
                     plt.savefig(os.path.join(plt_path, "e2e_Classifier_loss_%d_%d.pdf"%(encoder_cv, classification_cv)))
                     
+                    cv_accuracy.append(epoch_TEST_accuracy)
                     cv_auroc.append(epoch_TEST_auroc)
                     if n_classes == 2:
                         cv_auprc.append(epoch_TEST_auprc)
@@ -217,6 +219,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
                     print()
                 
                 print('TEST RESULTS OVER CV')
+                print('Accuracy:  %.2f +- %.2f'%(np.mean(cv_accuracy), np.std(cv_accuracy)))
                 print('AUC: %.2f +- %.2f'%(np.mean(cv_auroc), np.std(cv_auroc)))
                 if n_classes == 2:
                     print('AUPRC: %.2f +- %.2f'%(np.mean(cv_auprc), np.std(cv_auprc)))
