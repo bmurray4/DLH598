@@ -1,7 +1,7 @@
 import torch
 import random
-from tnc.models import CausalCNNEncoder, RnnPredictor
-from tnc.utils import dim_reduction, detect_incr_loss
+from models import CausalCNNEncoder, RnnPredictor
+from utils import dim_reduction, detect_incr_loss
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -278,6 +278,9 @@ if __name__ == '__main__':
     
     data_path = '../DONTCOMMITdata/hirid_numpy'
     
+    if not os.path.exists('./DONTCOMMITplots/HiRID_apache_classification'):
+        os.makedirs('./DONTCOMMITplots/HiRID_apache_classification')
+
     print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)
     print('encoder pruning_mask: ', encoder.pruning_mask)
 

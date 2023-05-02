@@ -1,7 +1,7 @@
 import torch
 import random
-from tnc.models import CausalCNNEncoder, RnnPredictor
-from tnc.utils import dim_reduction, detect_incr_loss
+from models import CausalCNNEncoder, RnnPredictor
+from utils import dim_reduction, detect_incr_loss
 import numpy as np
 import os
 import matplotlib.pyplot as plt
@@ -368,8 +368,13 @@ if __name__ == '__main__':
     
     encoder = CausalCNNEncoder(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
     
-    data_path = '../DONTCOMMITdata/hirid_numpy'
+    data_path = '../../gdrive/MyDrive/hirid_numpy'
     
+    if not os.path.exists('./DONTCOMMITplots/HiRID_apache_classification'):
+        os.makedirs('./DONTCOMMITplots/HiRID_apache_classification')
+    if not os.path.exists('./ckpt'):
+        os.makedirs('./ckpt')
+
     print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)
     print('encoder pruning_mask: ', encoder.pruning_mask)
 

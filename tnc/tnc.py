@@ -4,7 +4,7 @@ Temporal Neighborhood Coding (TNC) for unsupervised learning representation of n
 
 from pandas.core.indexes.base import Index
 import torch
-import tnc.alluvial as alluvial
+import alluvial as alluvial
 from torch.utils import data
 import matplotlib.pyplot as plt
 import argparse
@@ -20,9 +20,9 @@ os.environ['MKL_THREADING_LAYER'] = 'GNU' # Set this value to allow grid_search.
 from sklearn.metrics import silhouette_score, davies_bouldin_score, roc_curve
 from sklearn.cluster import AgglomerativeClustering
 from datetime import datetime
-from tnc.models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder
-from tnc.utils import plot_heatmap, dim_reduction_mixed_clusters, dim_reduction_positive_clusters, plot_pca_trajectory, detect_incr_loss, dim_reduction
-from tnc.evaluations import WFClassificationExperiment, ClassificationPerformanceExperiment
+from models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder
+from utils import plot_heatmap, dim_reduction_mixed_clusters, dim_reduction_positive_clusters, plot_pca_trajectory, detect_incr_loss, dim_reduction
+from evaluations import WFClassificationExperiment, ClassificationPerformanceExperiment
 from statsmodels.tsa import stattools
 from sklearn.decomposition import PCA
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report

@@ -7,8 +7,8 @@ import pickle
 import pandas as pd
 import random
 
-from tnc.models import RnnEncoder, StateClassifier, E2EStateClassifier, WFEncoder
-from tnc.utils import create_simulated_dataset
+from models import RnnEncoder, StateClassifier, E2EStateClassifier, WFEncoder
+from utils import create_simulated_dataset
 
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix
