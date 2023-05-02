@@ -237,7 +237,7 @@ def apache_prediction(encoder, data_path, device):
     print('Cutting off last 3 hrs of data')
     truncate_amt = 36
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    data_path = '../DONTCOMMITdata/hirid_numpy'
+
     train_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
     TEST_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
 
@@ -266,7 +266,7 @@ def apache_prediction(encoder, data_path, device):
     train_linear_classifier(X_train=train_circulatory_data_maps, y_train=y_train, 
     X_validation=train_circulatory_data_maps, y_validation=y_train, # We don't optimize hyper parameters so just train and TEST is used.
     X_TEST=TEST_circulatory_data_maps, y_TEST=y_TEST, encoding_size=encoder.pruned_encoding_size,
-    encoder=encoder, window_size=12, target_names=apache_names, ckpt_path='./ckpt', plt_path='./DONTCOMMITplots/HiRID_apache_classification', 
+    encoder=encoder, window_size=12, target_names=['Normal', 'Circulatory Failure'], ckpt_path='./ckpt', plt_path='./DONTCOMMITplots/HiRID_apache_classification', 
     classifier_name='e2e_apache_classifier', class_weights=class_weights, device=device, lr_list = [.002],
     weight_decay_list = [.0004], n_epochs_list = [100])
 
@@ -279,7 +279,7 @@ if __name__ == '__main__':
     
     encoder = CausalCNNEncoder(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
     
-    data_path = '../DONTCOMMITdata/hirid_numpy'
+    data_path = '../../gdrive/MyDrive/hirid_numpy'
     
     if not os.path.exists('./DONTCOMMITplots/HiRID_apache_classification'):
         os.makedirs('./DONTCOMMITplots/HiRID_apache_classification')
