@@ -1326,7 +1326,7 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
         print('shape of train mixed labels: ', train_mixed_labels.shape)
         # clustering_encodings is of shape (num_samples, seq_len//window_size, encoding_size)
         # encoding_mask is of shape (num_samples, seq_len//window_size)
-        pos_clustering_encodings, pos_encoding_mask = encoder.forward_seq(clustering_data_maps[pos_inds][:, :, :, -pre_positive_window:], return_encoding_mask=True)
+        pos_clustering_encodings, pos_encoding_mask = encoder.forward_seq(clustering_data_maps[pos_inds], return_encoding_mask=True)
         
         neg_clustering_encodings, neg_encoding_mask = encoder.forward_seq(clustering_data_maps[neg_inds], return_encoding_mask=True)
 
@@ -1457,9 +1457,9 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
             # neg_encoding_mask shape:  torch.Size([175, 96])
             
             #ERROR HERE
-            # encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask])
+            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask])
 
-            encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask[:,:pos_encoding_mask.shape[1]]])
+            #encoding_mask = torch.vstack([pos_encoding_mask, neg_encoding_mask[:,:pos_encoding_mask.shape[1]]])
             for cluster_name in range(clustering_model.n_clusters):
                 alluvial_dict['Cluster %d'%cluster_name] = {}
                 cluster_name = str(cluster_name)
