@@ -1,7 +1,7 @@
 import random
 import argparse
 import torch
-from tnc.tnc import main
+from TRACE.tnc import main
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # device = 'mps' if torch.backends.mps.is_available() else 'cpu'
