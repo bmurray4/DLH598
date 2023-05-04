@@ -1197,6 +1197,7 @@ class GRUDEncoder(nn.Module):
     '''Encodes time series data using GRUD cells'''
     def __init__(self, num_features, hidden_size, num_layers, encoding_size, extra_layer_types, dropout=0, device='cpu') -> None:
         super(GRUDEncoder, self).__init__()
+        #It looks like num_features do not matter
         self.num_features = num_features
         self.hidden_size = hidden_size
         self.num_layers = num_layers
