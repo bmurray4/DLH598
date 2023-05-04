@@ -208,9 +208,9 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
 
     '''
     if not os.path.exists(os.path.join(ckpt_path, '%s_%s'%(data_type, exp_type))):
-        os.mkdir(os.path.join(ckpt_path, '%s_%s'%(data_type, exp_type)))
+        os.makedirs(os.path.join(ckpt_path, '%s_%s'%(data_type, exp_type)))
     if not os.path.exists(os.path.join(plt_path, '%s_%s'%(data_type, exp_type))):
-        os.mkdir(os.path.join(plt_path, '%s_%s'%(data_type, exp_type)))
+        os.makedirs(os.path.join(plt_path, '%s_%s'%(data_type, exp_type)))
     
     print("Training Linear Classifier", flush=True)
     if data_type=='ICU':
@@ -572,9 +572,9 @@ def epoch_run(data, encoder, device, window_size, optimizer=None, train=True):
 
 def learn_encoder(x, window_size, data, encoding_size, lr=0.001, decay=0, n_epochs=100, device='cpu', n_cross_val=1):
     if not os.path.exists("./DONTCOMMITplots/%s_trip/"%data):
-        os.mkdir("./DONTCOMMITplots/%s_trip/"%data)
+        os.makedirs("./DONTCOMMITplots/%s_trip/"%data)
     if not os.path.exists("./ckpt/%s_trip/"%data):
-        os.mkdir("./ckpt/%s_trip/"%data)
+        os.makedirs("./ckpt/%s_trip/"%data)
     for cv in range(n_cross_val):
         if 'ICU' in data:
             #encoding_size = 16
@@ -617,9 +617,9 @@ def learn_encoder(x, window_size, data, encoding_size, lr=0.001, decay=0, n_epoc
 
 def main(is_train, data_type, lr, cv):
     if not os.path.exists("DONTCOMMITplots/HiRID_trip"):
-        os.mkdir("./DONTCOMMITplots/HiRID_trip")
+        os.makedirs("./DONTCOMMITplots/HiRID_trip")
     if not os.path.exists("./ckpt/HiRID_trip"):
-        os.mkdir("./ckpt/HiRID_trip")
+        os.makedirs("./ckpt/HiRID_trip")
 
     if data_type == 'ICU':
         length_of_hour = int(60*60/5)

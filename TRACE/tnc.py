@@ -4,7 +4,7 @@ Temporal Neighborhood Coding (TNC) for unsupervised learning representation of n
 
 from pandas.core.indexes.base import Index
 import torch
-import alluvial as alluvial
+import TRACE.alluvial as alluvial
 from torch.utils import data
 import matplotlib.pyplot as plt
 import argparse
@@ -20,9 +20,9 @@ os.environ['MKL_THREADING_LAYER'] = 'GNU' # Set this value to allow grid_search.
 from sklearn.metrics import silhouette_score, davies_bouldin_score, roc_curve
 from sklearn.cluster import AgglomerativeClustering
 from datetime import datetime
-from models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder
-from utils import plot_heatmap, dim_reduction_mixed_clusters, dim_reduction_positive_clusters, plot_pca_trajectory, detect_incr_loss, dim_reduction
-from evaluations import WFClassificationExperiment, ClassificationPerformanceExperiment
+from TRACE.models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder
+from TRACE.utils import plot_heatmap, dim_reduction_mixed_clusters, dim_reduction_positive_clusters, plot_pca_trajectory, detect_incr_loss, dim_reduction
+from TRACE.evaluations import WFClassificationExperiment, ClassificationPerformanceExperiment
 from statsmodels.tsa import stattools
 from sklearn.decomposition import PCA
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report
@@ -1033,7 +1033,7 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
         window_size = learn_encoder_hyper_params['window_size']
         length_of_hour = int((60*60)/300) # 60 seconds * 60 / 300 (which is num seconds in 5 min)
         
-        path = '../../gdrive/MyDrive/hirid_numpy'
+        path = '../gdrive/MyDrive/hirid_numpy'
         signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
         sliding_gap = 1
         

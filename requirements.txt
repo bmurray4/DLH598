@@ -1,0 +1,11 @@
+torch
+torch torchvision
+pandas
+hdbscan
+umap
+matplotlib
+seaborn
+statsmodels
+pyyaml
+numpy
+scikit-learn
