@@ -1264,6 +1264,8 @@ class GRUDEncoder(nn.Module):
             c_0 = torch.zeros(self.num_layers, X.shape[1], self.hidden_size).to(self.device)
             past = (h_0, c_0)
         if self.num_layers > 1:
+            #print(X.shape)
+            #print(past.shape)
             out, _ = self.layers[1](X.to(self.device), past)  # out shape = [seq_len, batch_size, hidden_size]. 
             encodings = self.linear(out[-1]) # Gets the (batch_size, hidden_size) matrix from the last time step
         else:

@@ -368,8 +368,15 @@ def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type
         
         
         # data is of shape (num_samples, num_encodings_per_sample, encoding_size)
-        encoding_batch, encoding_mask = encoder.forward_seq(data_batch, return_encoding_mask=True)
-        encoding_batch = encoding_batch.to(device)
+        if encoder_type == 'GRUD':
+            encoding_batch= encoder(data_batch)
+            #reshape to (batch_size, pruned_encoding_size)
+            encoding_batch = torch.masked_select(encoding_batch, encoder.pruning_mask).reshape(encoding_batch.shape[0],encoder.pruned_encoding_size)
+            encoding_batch = encoding_batch.to(device)
+            encoding_mask = encoder.pruning_mask
+        else:
+            encoding_batch, encoding_mask = encoder.forward_seq(data_batch, return_encoding_mask=True)
+            encoding_batch = encoding_batch.to(device)
 
         if data_type == None:
             # Takes every window_size'th label for each sample (so it matches the frequency of encodings)
@@ -396,7 +403,11 @@ def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type
             
             # So now encoding_batch is of shape (num_samples, num_windows_per_sample, encoding_size)
             # and train_labels is of shape (num_samples,)
-        predictions = torch.squeeze(classifier(encoding_batch)) # of shape (bs,)
+        if encoder_type == 'GRUD':
+
+            predictions = torch.squeeze(classifier(encoding_batch, return_full_seq = True)) # of shape (bs,)
+        else:
+            predictions = torch.squeeze(classifier(encoding_batch)) # of shape (bs,)
         
         pos_weight = torch.Tensor([10]).to(device)
         if train:
@@ -658,7 +669,7 @@ def get_encoder(encoder_type, encoder_hyper_params):
 
 
 
-def epoch_run(loader, disc_model, encoder, device, pruning_mask, w=0, optimizer=None, train=True, acf_plus=False, compute_pruning_mask=False):
+def epoch_run(loader, disc_model, encoder, encoder_type, device, pruning_mask, w=0, optimizer=None, train=True, acf_plus=False, compute_pruning_mask=False):
     if train: # Puts encoder and discriminator into train mode
         encoder.train()
         disc_model.train()
@@ -702,9 +713,15 @@ def epoch_run(loader, disc_model, encoder, device, pruning_mask, w=0, optimizer=
         non_neighbors = torch.zeros((len(x_n))).to(device)
         x_t, x_p, x_n = x_t.squeeze().to(device), x_p.squeeze().to(device), x_n.squeeze().to(device)
         
-        z_t = encoder(x_t, return_pruned=False)
-        z_p = encoder(x_p, return_pruned=False)
-        z_n = encoder(x_n, return_pruned=False) # z_t, z_p, and z_n are now all of size (batch_size*mc_sample_size, encoding_size)
+        if encoder_type == 'CausalCNNEncoder':
+
+            z_t = encoder(x_t, return_pruned=False)
+            z_p = encoder(x_p, return_pruned=False)
+            z_n = encoder(x_n, return_pruned=False) # z_t, z_p, and z_n are now all of size (batch_size*mc_sample_size, encoding_size)
+        elif encoder_type == 'GRUD':
+            z_t = encoder(x_t)
+            z_p = encoder(x_p)
+            z_n = encoder(x_n)
         
         if compute_pruning_mask:
             encodings = torch.vstack([z_t[:, pruning_mask], z_p[:, pruning_mask], z_n[:, pruning_mask]]) # Now of shape (num_encodings, pruned encoding_size)
@@ -858,9 +875,9 @@ def learn_encoder(data_maps, encoder_type, encoder_hyper_params, pretrain_hyper_
                     compute_mask = False
 
                 
-                epoch_loss, epoch_acc, pruning_mask = epoch_run(train_loader, disc_model, encoder, optimizer=optimizer,
+                epoch_loss, epoch_acc, pruning_mask = epoch_run(train_loader, disc_model, encoder, encoder_type, optimizer=optimizer,
                                                 w=w, train=True, device=device, acf_plus=ACF_PLUS, compute_pruning_mask=compute_mask, pruning_mask=pruning_mask)
-                validation_loss, validation_acc, _ = epoch_run(valid_loader, disc_model, encoder, train=False, w=w, device=device, acf_plus=ACF_PLUS, compute_pruning_mask=False, pruning_mask=pruning_mask)
+                validation_loss, validation_acc, _ = epoch_run(valid_loader, disc_model, encoder, encoder_type, train=False, w=w, device=device, acf_plus=ACF_PLUS, compute_pruning_mask=False, pruning_mask=pruning_mask)
                 
                 performance.append((epoch_loss, validation_loss, epoch_acc, validation_acc))
                 if epoch%10 == 0:
@@ -1263,6 +1280,15 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
                         X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
                         encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
                         data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
+                    
+                    elif encoder_type == 'GRUD':
+                        #GRUD does not need window_size, so it is set to 0
+                        classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
+                        X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
+                        X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
+                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=0, return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
+                    
                     else:
                         classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
                         X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
