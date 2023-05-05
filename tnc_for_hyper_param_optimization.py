@@ -72,8 +72,6 @@ if __name__ == '__main__':
     parser.add_argument('--CausalCNNEncoder_kernel_size', type=int)
     parser.add_argument('--CausalCNNEncoder_window_size', type=int)
 
-
-
     # Learn encoder hyperparams
     parser.add_argument('--window_size', type=int)
     parser.add_argument('--w', type=float)
@@ -143,7 +141,7 @@ if __name__ == '__main__':
                                 'transformer_act': args.CNN_Transformer_transformer_act, 
                                 'transformer_fc_dropout': args.CNN_Transformer_transformer_fc_dropout}
     
-    elif args.encoder_type == 'CausalCNNEncoder':
+    elif args.encoder_type == 'CausalCNNEncoder' or args.encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
         encoder_hyper_params = {'in_channels': args.CausalCNNEncoder_in_channels,
                                 'channels': args.CausalCNNEncoder_channels, 
                                 'depth': args.CausalCNNEncoder_depth, 

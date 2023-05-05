@@ -20,7 +20,7 @@ os.environ['MKL_THREADING_LAYER'] = 'GNU' # Set this value to allow grid_search.
 from sklearn.metrics import silhouette_score, davies_bouldin_score, roc_curve
 from sklearn.cluster import AgglomerativeClustering
 from datetime import datetime
-from TRACE.models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder
+from TRACE.models import CNN_Transformer_Encoder, EncoderMultiSignalMIMIC, GRUDEncoder, RnnEncoder, WFEncoder, TST, EncoderMultiSignal, LinearClassifier, RnnPredictor, EncoderMultiSignalMIMIC, CausalCNNEncoder, CausalCNNEncoderNoDilationNoPruning
 from TRACE.utils import plot_heatmap, dim_reduction_mixed_clusters, dim_reduction_positive_clusters, plot_pca_trajectory, detect_incr_loss, dim_reduction
 from TRACE.evaluations import WFClassificationExperiment, ClassificationPerformanceExperiment
 from statsmodels.tsa import stattools
@@ -651,6 +651,9 @@ def get_encoder(encoder_type, encoder_hyper_params):
         return CNN_Transformer_Encoder(**encoder_hyper_params)
     elif encoder_type == 'CausalCNNEncoder':
         return CausalCNNEncoder(**encoder_hyper_params)
+    elif encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+        return CausalCNNEncoderNoDilationNoPruning(**encoder_hyper_params)
+    
 
 
 
@@ -1221,7 +1224,10 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
                 if os.path.exists('../ckpt/%s/%s_encoder_checkpoint_%d_%sClassifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, 'circulatory' if circulatory_failure else '', classification_cv)):
                     checkpoint = torch.load('../ckpt/%s/%s_encoder_checkpoint_%d_Classifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, classification_cv))
                     if data_type == 'HiRID' or data_type == 'ICU':
-                        classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8).to(device)
+                        if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+                            classifier = RnnPredictor(encoding_size=encoder.encoding_size, hidden_size=8).to(device)
+                        else:
+                            classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8).to(device)
                     
                     elif data_type == None:
                         classifier = LinearClassifier(input_size=encoder.pruned_encoding_size).to(device)
@@ -1251,11 +1257,18 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
                     train_mixed_labels_cv = train_mixed_labels_cv[inds_for_classification]
                     '''
                     print("TRAINING LINEAR CLASSIFIER")
-                    classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
-                    X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
-                    X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                    encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
-                    data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
+                    if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+                        classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
+                        X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
+                        X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
+                        encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
+                    else:
+                        classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
+                        X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
+                        X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
+                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
 
                     classifier_validation_aurocs.append(valid_auroc)
                     classifier_validation_auprcs.append(valid_auprc)
