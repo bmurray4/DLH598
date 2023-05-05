@@ -371,8 +371,8 @@ if __name__ == '__main__':
     process = psutil.Process(os.getpid())
     signal_list = ['vm1', 'vm3', 'vm4', 'vm5', 'vm13', 'vm20', 'vm28', 'vm62', 'vm136', 'vm146', 'vm172', 'vm174', 'vm176', 'pm41', 'pm42', 'pm43', 'pm44', 'pm87']
 
-    process_mortality = False     # process and save the mortality data
-    process_circulatory = True  # process and save the circulatory failure data. You may want to do one at a time due to potential memory constraints.
+    process_mortality = True     # process and save the mortality data
+    process_circulatory = False  # process and save the circulatory failure data. You may want to do one at a time due to potential memory constraints.
     
 
     if process_mortality:
