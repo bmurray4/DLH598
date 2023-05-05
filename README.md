@@ -89,9 +89,9 @@ The command must be ran twice, the first time is to be run with process_mortalit
 
 To train our encoder on the HiRID dataset, ensure you are in the `DLH598` directory of this repo.
 Run the followwing command:
-'''
+```
 python3 -u -m tnc_for_hyper_param_optimization --train --cont --ID 0000 --plot_embeddings --encoder_type CausalCNNEncoder --window_size 12 --w 0.05 --batch_size 30 --lr .00005 --decay 0.0005 --mc_sample_size 6 --n_epochs 150 --data_type HiRID --n_cross_val_encoder 1 --ETA 4 --ACF_PLUS --ACF_nghd_Threshold 0.6 --ACF_out_nghd_Threshold 0.1 --CausalCNNEncoder_in_channels 36 --CausalCNNEncoder_channels 4 --CausalCNNEncoder_depth 1 --CausalCNNEncoder_reduced_size 2 --CausalCNNEncoder_encoding_size 10 --CausalCNNEncoder_kernel_size 2 --CausalCNNEncoder_window_size 12 --n_cross_val_classification 3 
-'''
+```
 
 The following command will train the TRACE encoder and store the resulting moder within the following directory ckpt/HiRID/. The TRACE model will be saved based on it's user provided ID on the above command line. Example the model for ID 0000 will be store as 0000_CausalCNNEncoder_HiRID_checkpoint_0.tar
 
@@ -103,9 +103,9 @@ The following is how to run your model against the processed dataset:
 
 ### TRACE
 From the `DLH598` directory run the following command:
-'''
+```
 python3 -u -m tnc_for_hyper_param_optimization --train --cont --ID 0000 --plot_embeddings --encoder_type CausalCNNEncoder --window_size 12 --w 0.05 --batch_size 30 --lr .00005 --decay 0.0005 --mc_sample_size 6 --n_epochs 150 --data_type HiRID --n_cross_val_encoder 1 --ETA 4 --ACF_PLUS --ACF_nghd_Threshold 0.6 --ACF_out_nghd_Threshold 0.1 --CausalCNNEncoder_in_channels 36 --CausalCNNEncoder_channels 4 --CausalCNNEncoder_depth 1 --CausalCNNEncoder_reduced_size 2 --CausalCNNEncoder_encoding_size 10 --CausalCNNEncoder_kernel_size 2 --CausalCNNEncoder_window_size 12 --n_cross_val_classification 3 
-'''
+```
 
 If the id is set to an ID of a previously trained TRACE encoder, the command will load the encoder and train a linear classifier model to predict the mortality rate. If not, the program will first train an TRACE encoder and then proceed to train the linear classifier.
 ### TNC
