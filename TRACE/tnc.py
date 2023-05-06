@@ -352,7 +352,7 @@ class TNCDataset(data.Dataset):
 
 ######################################################################################################
 
-def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type, window_size, encoder, encoding_size):
+def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type, window_size, encoder, encoding_size, encoder_type):
     if train:
         classifier.train()
     else:
@@ -446,7 +446,7 @@ def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type
     
     return epoch_predictions, epoch_losses, epoch_labels
 
-def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, num_pre_positive_encodings, encoder, window_size, batch_size=32, return_models=False, return_scores=False, pos_sample_name='arrest', data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name=""):
+def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, num_pre_positive_encodings, encoder, encoder_type, window_size, batch_size=32, return_models=False, return_scores=False, pos_sample_name='arrest', data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name=""):
     '''
     Trains a classifier to predict positive events in samples.
     X_train is of shape (num_train_samples, 2, num_features, seq_len)
@@ -485,20 +485,20 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         # linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type, window_size, encoder, encoding_size):
         epoch_train_predictions, epoch_train_losses, epoch_train_labels = linear_classifier_epoch_run(dataset=train_data_loader, train=True,
                                                     classifier=classifier,
-                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size)
+                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size, encoder_type = encoder_type)
 
         
         classifier.eval()
         epoch_validation_predictions, epoch_validation_losses, epoch_validation_labels = linear_classifier_epoch_run(dataset=validation_data_loader, train=False,
                                                     classifier=classifier,
-                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size)
+                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size, encoder_type = encoder_type)
 
         
         
 
         epoch_TEST_predictions, epoch_TEST_losses, epoch_TEST_labels = linear_classifier_epoch_run(dataset=TEST_data_loader, train=False,
                                                     classifier=classifier,
-                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size)
+                                                    optimizer=optimizer, data_type=data_type, window_size=window_size, encoder=encoder, encoding_size=encoding_size, encoder_type = encoder_type)
 
         
         # TRAIN 
@@ -1278,7 +1278,7 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
                         classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
                         X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
                         X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                        encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, encoder_type = encoder_type, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
                         data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
                     
                     elif encoder_type == 'GRUD':
@@ -1286,14 +1286,14 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
                         classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
                         X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
                         X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=0, return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, encoder_type = encoder_type, window_size=0, return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
                         data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
                     
                     else:
                         classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
                         X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
                         X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, encoder_type = encoder_type, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
                         data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
 
                     classifier_validation_aurocs.append(valid_auroc)
