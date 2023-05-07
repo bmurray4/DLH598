@@ -91,6 +91,9 @@ if __name__ == '__main__':
 
     # Classifier hyper params
     parser.add_argument('--n_cross_val_classification', type=int)
+    # LSTM vs GRU classifier
+    parser.add_argument('--classifierModel', default="LSTM", type=str)
+
 
     args = parser.parse_args()
 
@@ -168,7 +171,8 @@ if __name__ == '__main__':
                                     'ACF_nghd_Threshold': args.ACF_nghd_Threshold,
                                     'ACF_out_nghd_Threshold': args.ACF_out_nghd_Threshold}
     
-    classification_hyper_params = {'n_cross_val_classification': args.n_cross_val_classification}
+    classification_hyper_params = {'n_cross_val_classification': args.n_cross_val_classification,
+                                   'modelType': args.classifierModel}
     
     
     UNIQUE_ID = args.ID

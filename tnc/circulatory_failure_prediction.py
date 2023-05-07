@@ -1,12 +1,14 @@
 import torch
 import numpy as np
 from utils import plot_pca_trajectory_binned, plot_tsne_trajectory_binned, dim_reduction, plot_heatmap_subset_signals_with_risk, plot_pca_trajectory, detect_incr_loss
-from models import CausalCNNEncoder, RnnPredictor
+from models import CausalCNNEncoder, RnnPredictor, CausalCNNEncoderNoDilationNoPruning
 import os
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report
 import matplotlib.pyplot as plt
 import random
 import argparse 
+from datetime import datetime
+
 
 
 def linear_classifier_epoch_run(dataset, train, classifier, class_weights, optimizer, data_type, window_size, encoder, encoding_size):
@@ -55,7 +57,7 @@ def linear_classifier_epoch_run(dataset, train, classifier, class_weights, optim
     
     return epoch_predictions, epoch_losses, epoch_labels
 
-def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, classifier_input_size, baseline_type, encoder, window_size, class_weights, target_names, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path='../../ckpt',  plt_path="../DONTCOMMITplots", classifier_name=""):
+def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, classifier_input_size, baseline_type, encoder, window_size, class_weights, target_names, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path='../ckpt',  plt_path="../DONTCOMMITplots", classifier_name="",classifierModel="LSTM"):
     '''
     Trains a classifier to predict positive events in samples. 
     X_train is of shape (num_train_samples, 2, num_features, seq_len)
@@ -71,7 +73,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
             classifier = RnnPredictor(encoding_size=18, hidden_size=8, n_classes=len(unique)).to(device)
         else:
             (unique, counts) = np.unique(y_train.detach().cpu(), return_counts=True)
-            classifier = RnnPredictor(encoding_size=classifier_input_size, hidden_size=8, n_classes=len(unique)).to(device)
+            classifier = RnnPredictor(encoding_size=classifier_input_size, hidden_size=8, n_classes=len(unique),modelType=classifierModel).to(device)
             encoder.eval()
         
         print('X_train shape: ', X_train.shape)
@@ -264,14 +266,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run circulatory failure prediction')
     parser.add_argument('--encoder_type', type=str, default=None)
     parser.add_argument('--checkpoint_file', type=str, default=None)
+    parser.add_argument('--classifierModel',type=str,default="LSTM")
     args = parser.parse_args()
 
     encoder_type = args.encoder_type
     checkpoint_str = args.checkpoint_file
+    classifierModel = args.classifierModel
     print('Cutting off last 3 hrs of data')
     truncate_amt = 36
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    data_path = '../../gdrive/MyDrive/hirid_numpy'
+    data_path = '../gdrive/MyDrive/hirid_numpy'
     train_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
     TEST_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
 
@@ -280,8 +284,8 @@ if __name__ == '__main__':
 
     train_circulatory_PIDs = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_PIDs.npy'))).float()
     TEST_circulatory_PIDs = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_PIDs.npy'))).float()
-    if not os.path.exists('./DONTCOMMITplots/HiRID_circulatory_classification'):
-        os.makedirs('./DONTCOMMITplots/HiRID_circulatory_classification')
+    if not os.path.exists('tnc/DONTCOMMITplots/HiRID_circulatory_classification'):
+        os.makedirs('tnc/DONTCOMMITplots/HiRID_circulatory_classification')
     
     random.seed(100)
     if encoder_type == 'TNC_ICU':
@@ -297,6 +301,19 @@ if __name__ == '__main__':
         print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)
         classifier_input_size = encoder.pruned_encoding_size
         print('encoder pruning_mask: ', encoder.pruning_mask)
+    elif encoder_type == 'TNC_ICU_NoDilation_NoPruning':
+        print('checkpoint_str: ', checkpoint_str)
+        checkpoint = torch.load(checkpoint_str)
+        plot_heatmap=False
+        encoder = CausalCNNEncoderNoDilationNoPruning(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
+        encoder.load_state_dict(checkpoint['encoder_state_dict'])
+    
+        # encoder.pruning_mask = checkpoint['pruning_mask']
+        # encoder = encoder.to(device)
+        # encoder.pruned_encoding_size = int(torch.sum(encoder.pruning_mask))
+        # print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)
+        classifier_input_size = encoder.encoding_size
+        # print('encoder pruning_mask: ', encoder.pruning_mask)
     elif encoder_type == 'TNC':
         print('checkpoint_str: ', checkpoint_str)
         checkpoint = torch.load(checkpoint_str)
@@ -392,14 +409,17 @@ if __name__ == '__main__':
     # target_names, batch_size=32, return_models=False, return_scores=False, data_type='ICU', 
     # classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", 
     # classifier_name=""):
+    print('Started training classifier')
+    print("Current Time ", datetime.now())
     classifier = train_linear_classifier(X_train=train_circulatory_data_maps, y_train=y_train,
                             X_validation=train_circulatory_data_maps, y_validation=y_train,
                             X_TEST=TEST_circulatory_data_maps, y_TEST=y_TEST, 
                             classifier_input_size=classifier_input_size, baseline_type=encoder_type, encoder=encoder, window_size=12, 
-                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='../../ckpt', 
-                            plt_path='./DONTCOMMITplots/HiRID_circulatory_classification', 
-                            classifier_name='circulatory_classifier', class_weights=class_weights, return_models=True, data_type='HiRID')
-    
+                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='../ckpt', 
+                            plt_path='tnc/DONTCOMMITplots/HiRID_circulatory_classification', 
+                            classifier_name='circulatory_classifier', class_weights=class_weights, return_models=True, data_type='HiRID',classifierModel=classifierModel)
+    print('Finished training classifier')
+    print("Current Time ", datetime.now())
     if plot_heatmap:
         signal_list = ['Heart rate', 'Systolic BP', 'Diastolic BP', 'MAP', 'Cardiac output', 'SpO2', 'RASS',
                     'peak inspiratory pressure (ventilator)', 'Arterial Lactate', 'Lactate venous', 'INR',
@@ -422,12 +442,12 @@ if __name__ == '__main__':
             
             risk_scores = torch.nn.Softmax(dim=1)(classifier.forward(encodings.unsqueeze(0), return_full_seq=True).squeeze()).detach().cpu()[:, 1] # Score for positive class, i.e. risk of circ failure
             
-            plot_heatmap_subset_signals_with_risk(sample=sample.cpu(), sample_mask=sample_mask, encodings=encodings.detach().cpu(),
-            risk_scores=risk_scores, path='./DONTCOMMITplots/HiRID_circulatory_classification', hm_file_name='risk_heatmap%d.pdf'%ind,
-            risk_plot_title='Risk of Circulatory Failure', signal_list=signal_list, length_of_hour=12, 
-            risk_x_axis_label='Hours until circulatory failure', truncate_amt=truncate_amt)
+            # plot_heatmap_subset_signals_with_risk(sample=sample.cpu(), sample_mask=sample_mask, encodings=encodings.detach().cpu(),
+            # risk_scores=risk_scores, path='tnc/DONTCOMMITplots/HiRID_circulatory_classification', hm_file_name='risk_heatmap%d.pdf'%ind,
+            # risk_plot_title='Risk of Circulatory Failure', signal_list=signal_list, length_of_hour=12, 
+            # risk_x_axis_label='Hours until circulatory failure', truncate_amt=truncate_amt)
             
-            plot_pca_trajectory(encodings=encodings.detach().cpu(), path='./DONTCOMMITplots/HiRID_circulatory_classification', pca_file_name='trajectory%d.pdf'%ind, pos_sample_name='circulatory failure')
+            # plot_pca_trajectory(encodings=encodings.detach().cpu(), path='tnc/DONTCOMMITplots/HiRID_circulatory_classification', pca_file_name='trajectory%d.pdf'%ind, pos_sample_name='circulatory failure')
 
 
 

@@ -1,6 +1,6 @@
 import torch
 import random
-from models import CausalCNNEncoder, RnnPredictor
+from models import CausalCNNEncoder, RnnPredictor, CausalCNNEncoderNoDilationNoPruning
 from utils import dim_reduction, detect_incr_loss
 import numpy as np
 import os
@@ -55,7 +55,7 @@ def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type
     
     return epoch_predictions, epoch_losses, epoch_labels
 
-def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, encoder, window_size, target_names, class_weights, device, lr_list, weight_decay_list, n_epochs_list, encoder_type, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name=""):
+def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, encoder, window_size, target_names, class_weights, device, lr_list, weight_decay_list, n_epochs_list, encoder_type, batch_size=32, return_models=False, return_scores=False, data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="tnc/DONTCOMMITplots", classifier_name="",classifierModel="LSTM"):
     '''
     Trains a classifier to predict positive events in samples. 
     X_train is of shape (num_train_samples, 2, num_features, seq_len)
@@ -83,7 +83,10 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
                 for cv in range(3):
                     (unique, counts) = np.unique(y_train.cpu(), return_counts=True)
                     n_classes = len(unique)
-                    classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8, n_classes=n_classes).to(device)
+                    if encoder_type == 'TNC_ICU_NoDilation_NoPruning':
+                        classifier = RnnPredictor(encoding_size=encoder.encoding_size, hidden_size=8, n_classes=n_classes,classifierModel=classifierModel).to(device)
+                    else:
+                        classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8, n_classes=n_classes,classifierModel=classifierModel).to(device)
                     params = list(classifier.parameters())
                     #lr_list = [.007] #[0.01, 0.001, 0.0005, 0.007]
                     #weight_decay_list = [.001] #[0.001, 0.0001, 0]
@@ -233,7 +236,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         return (epoch_validation_auroc, epoch_validation_auroc)
 
 
-def apache_prediction(encoder, encoder_cv, data_path, device, encoder_type):
+def apache_prediction(encoder, encoder_cv, data_path, device, encoder_type,classifierModel="LSTM"):
     train_first_24_hrs_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'train_first_24_hrs_data_maps.npy'))).float()
     TEST_first_24_hrs_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_first_24_hrs_data_maps.npy'))).float()
 
@@ -353,18 +356,25 @@ def apache_prediction(encoder, encoder_cv, data_path, device, encoder_type):
     
     encodings = np.stack(encodings)
     apache_labels = np.array(apache_labels)
-    dim_reduction(encodings=encodings, labels=apache_labels, save_path='./DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_TSNE', label_names=apache_names)
-    dim_reduction(encodings=encodings, labels=apache_labels, save_path='./DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_PCA', label_names=apache_names, reduction_type='PCA')
-    dim_reduction(encodings=encodings, labels=apache_labels, save_path='./DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_UMAP', label_names=apache_names, reduction_type='UMAP')
+    # dim_reduction(encodings=encodings, labels=apache_labels, save_path='tnc/DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_TSNE', label_names=apache_names)
+    # dim_reduction(encodings=encodings, labels=apache_labels, save_path='tnc/DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_PCA', label_names=apache_names, reduction_type='PCA')
+    # dim_reduction(encodings=encodings, labels=apache_labels, save_path='tnc/DONTCOMMITplots/HiRID_apache_classification', plot_name='first_encodings_clustered_UMAP', label_names=apache_names, reduction_type='UMAP')
 
 
-
-    train_linear_classifier(X_train=train_first_24_hrs_data_maps, y_train=train_Apache_Groups, 
-    X_validation=train_first_24_hrs_data_maps, y_validation=train_Apache_Groups, # We don't optimize hyper parameters so just train and TEST is used.
-    X_TEST=TEST_first_24_hrs_data_maps, y_TEST=TEST_Apache_Groups, encoding_size=encoder.pruned_encoding_size,
-    encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='../../ckpt', plt_path='./DONTCOMMITplots/HiRID_apache_classification', 
-    classifier_name='apache_classifier', class_weights=class_weights, device=device, lr_list = [.002],
-    weight_decay_list = [.0005], n_epochs_list = [200], encoder_type=encoder_type)
+    if encoder_type == 'TNC_ICU_NoDilation_NoPruning':
+        train_linear_classifier(X_train=train_first_24_hrs_data_maps, y_train=train_Apache_Groups, 
+        X_validation=train_first_24_hrs_data_maps, y_validation=train_Apache_Groups, # We don't optimize hyper parameters so just train and TEST is used.
+        X_TEST=TEST_first_24_hrs_data_maps, y_TEST=TEST_Apache_Groups, encoding_size=encoder.encoding_size,
+        encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='../ckpt', plt_path='tnc/DONTCOMMITplots/HiRID_apache_classification', 
+        classifier_name='apache_classifier', class_weights=class_weights, device=device, lr_list = [.002],
+        weight_decay_list = [.0005], n_epochs_list = [200], encoder_type=encoder_type,classifierModel=classifierModel)
+    else:
+        train_linear_classifier(X_train=train_first_24_hrs_data_maps, y_train=train_Apache_Groups, 
+        X_validation=train_first_24_hrs_data_maps, y_validation=train_Apache_Groups, # We don't optimize hyper parameters so just train and TEST is used.
+        X_TEST=TEST_first_24_hrs_data_maps, y_TEST=TEST_Apache_Groups, encoding_size=encoder.pruned_encoding_size,
+        encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='../ckpt', plt_path='tnc/DONTCOMMITplots/HiRID_apache_classification', 
+        classifier_name='apache_classifier', class_weights=class_weights, device=device, lr_list = [.002],
+        weight_decay_list = [.0005], n_epochs_list = [200], encoder_type=encoder_type,classifierModel=classifierModel)
 
 
     
@@ -375,29 +385,33 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run TNC')
     parser.add_argument('--checkpoint_file', type=str, default=None)
     parser.add_argument('--encoder_type', type=str, default=None)
+    parser.add_argument('--classifierModel',type=str,default="LSTM")
     args = parser.parse_args()
     checkpoint_file = args.checkpoint_file
     encoder_type = args.encoder_type
+    classifierModel = args.classifierModel
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     checkpoint = torch.load(checkpoint_file)
     print('Checkpoint: ', checkpoint_file)
     encoder_cv = 0
-    if not os.path.exists('./DONTCOMMITplots/HiRID_apache_classification'):
-        os.makedirs('./DONTCOMMITplots/HiRID_apache_classification')
+    if not os.path.exists('tnc/DONTCOMMITplots/HiRID_apache_classification'):
+        os.makedirs('tnc/DONTCOMMITplots/HiRID_apache_classification')
     if encoder_type == 'TNC_ICU':
         encoder = CausalCNNEncoder(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
+    elif encoder_type == 'TNC_ICU_NoDilation_NoPruning':
+        encoder = CausalCNNEncoderNoDilationNoPruning(in_channels=36, channels=4, depth=1, reduced_size=2, encoding_size=10, kernel_size=2, window_size=12, device=device)
     elif encoder_type == 'TNC':
         encoder = CausalCNNEncoder(in_channels=18, channels=4, depth=1, reduced_size=2, encoding_size=6, kernel_size=2, window_size=12, device=device)
     encoder.load_state_dict(checkpoint['encoder_state_dict'])
 
-    data_path = '../../gdrive/MyDrive/hirid_numpy'
+    data_path = '../gdrive/MyDrive/hirid_numpy'
     encoder.pruning_mask = checkpoint['pruning_mask']
     encoder.pruned_encoding_size = int(torch.sum(encoder.pruning_mask))
     print('encoder pruned_encoding_size: ', encoder.pruned_encoding_size)
     print('encoder pruning_mask: ', encoder.pruning_mask)
 
-    apache_prediction(encoder=encoder, encoder_cv=encoder_cv, data_path=data_path, device=device, encoder_type=encoder_type)
+    apache_prediction(encoder=encoder, encoder_cv=encoder_cv, data_path=data_path, device=device, encoder_type=encoder_type,classifierModel=classifierModel)
 
     
     

@@ -435,7 +435,7 @@ def linear_classifier_epoch_run(dataset, train, classifier, optimizer, data_type
     
     return epoch_predictions, epoch_losses, epoch_labels
 
-def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, num_pre_positive_encodings, encoder, window_size, batch_size=32, return_models=False, return_scores=False, pos_sample_name='arrest', data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name=""):
+def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST, y_TEST, encoding_size, num_pre_positive_encodings, encoder, window_size, batch_size=32, return_models=False, return_scores=False, pos_sample_name='arrest', data_type='ICU', classification_cv=0, encoder_cv=0, ckpt_path="../ckpt",  plt_path="../DONTCOMMITplots", classifier_name="",encoder_type="CausalCNNEncoder",classifierModelType="LSTM"):
     '''
     Trains a classifier to predict positive events in samples.
     X_train is of shape (num_train_samples, 2, num_features, seq_len)
@@ -447,9 +447,11 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         classifier = LinearClassifier(input_size=encoding_size).to(device)
 
     elif data_type=='HiRID' or data_type == 'ICU':
-        classifier = RnnPredictor(encoding_size=encoding_size, hidden_size=8).to(device)
-        
-   
+        if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+            classifier = RnnPredictor(encoding_size=encoder.encoding_size, hidden_size=8,modelType=classifierModelType).to(device)
+        else:
+            classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8,modelType=classifierModelType).to(device)        
+
     
     print('X_train shape: ', X_train.shape)
     print('batch_size: ', batch_size)
@@ -1221,59 +1223,59 @@ def main(train_encoder, data_type, encoder_type, encoder_hyper_params, learn_enc
 
                 
             
-                if os.path.exists('../ckpt/%s/%s_encoder_checkpoint_%d_%sClassifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, 'circulatory' if circulatory_failure else '', classification_cv)):
-                    checkpoint = torch.load('../ckpt/%s/%s_encoder_checkpoint_%d_Classifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, classification_cv))
-                    if data_type == 'HiRID' or data_type == 'ICU':
-                        if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
-                            classifier = RnnPredictor(encoding_size=encoder.encoding_size, hidden_size=8).to(device)
-                        else:
-                            classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8).to(device)
+                # if os.path.exists('../ckpt/%s/%s_encoder_checkpoint_%d_%sClassifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, 'circulatory' if circulatory_failure else '', classification_cv)):
+                #     checkpoint = torch.load('../ckpt/%s/%s_encoder_checkpoint_%d_Classifier_checkpoint_%d.tar'%(data_type, UNIQUE_ID, encoder_cv, classification_cv))
+                #     if data_type == 'HiRID' or data_type == 'ICU':
+                #         if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+                #             classifier = RnnPredictor(encoding_size=encoder.encoding_size, hidden_size=8,modelType=classification_hyper_params["modelType"]).to(device)
+                #         else:
+                #             classifier = RnnPredictor(encoding_size=encoder.pruned_encoding_size, hidden_size=8,modelType=classification_hyper_params["modelType"]).to(device)
                     
-                    elif data_type == None:
-                        classifier = LinearClassifier(input_size=encoder.pruned_encoding_size).to(device)
+                #     elif data_type == None:
+                #         classifier = LinearClassifier(input_size=encoder.pruned_encoding_size).to(device)
                     
 
-                    classifier.load_state_dict(checkpoint['classifier_state_dict'])
-                    print("Checkpoint loaded for classifier! Encoder cv %d, classifier cv %d"%(encoder_cv, classification_cv))
+                #     classifier.load_state_dict(checkpoint['classifier_state_dict'])
+                #     print("Checkpoint loaded for classifier! Encoder cv %d, classifier cv %d"%(encoder_cv, classification_cv))
                 
+                # else:
+                    
+                train_pos_sample_inds = [ind for ind in range(len(train_mixed_labels_cv)) if 1 in train_mixed_labels_cv[ind]]
+                train_neg_sample_inds = [ind for ind in range(len(train_mixed_labels_cv)) if 1 not in train_mixed_labels_cv[ind]]
+                
+                inds_for_classification = train_pos_sample_inds.copy()
+
+                print("Turned off multiplier enforcement for train data")
+                '''
+                # Modifying training data to be less imbalanced. We'll make sure there's roughly 20x more negative encodings to be classified than positive
+                if data_type == 'ICU':
+                    # Now we'll add the number of negative samples necessary to maintain a 20 times imbalance in encodings that get plotted
+                                            # for the positive indices we haven't set aside to plot, compute 20 times the number of encodings we'll get from them
+                    num_negatives_to_add = int((20*(pre_positive_window/window_size)*(len(train_pos_sample_inds)))/ \
+                                        (train_mixed_data_maps.shape[-1]/window_size)) # then divide by seq_len/window_size, i.e. the number of encodings we get from each negative sample.
+                    inds_for_classification.extend(train_neg_sample_inds[:min(num_negatives_to_add, len(train_neg_sample_inds))])
+
+                train_mixed_data_maps_cv = train_mixed_data_maps_cv[inds_for_classification]
+                train_mixed_labels_cv = train_mixed_labels_cv[inds_for_classification]
+                '''
+                print("TRAINING LINEAR CLASSIFIER")
+                if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
+                    classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
+                    X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
+                    X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
+                    encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                    data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv,encoder_type=encoder_type,classifierModelType=classification_hyper_params["modelType"])
                 else:
-                    
-                    train_pos_sample_inds = [ind for ind in range(len(train_mixed_labels_cv)) if 1 in train_mixed_labels_cv[ind]]
-                    train_neg_sample_inds = [ind for ind in range(len(train_mixed_labels_cv)) if 1 not in train_mixed_labels_cv[ind]]
-                    
-                    inds_for_classification = train_pos_sample_inds.copy()
+                    classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
+                    X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
+                    X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
+                    encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
+                    data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv,encoder_type=encoder_type,classifierModelType=classification_hyper_params["modelType"])
 
-                    print("Turned off multiplier enforcement for train data")
-                    '''
-                    # Modifying training data to be less imbalanced. We'll make sure there's roughly 20x more negative encodings to be classified than positive
-                    if data_type == 'ICU':
-                        # Now we'll add the number of negative samples necessary to maintain a 20 times imbalance in encodings that get plotted
-                                                # for the positive indices we haven't set aside to plot, compute 20 times the number of encodings we'll get from them
-                        num_negatives_to_add = int((20*(pre_positive_window/window_size)*(len(train_pos_sample_inds)))/ \
-                                            (train_mixed_data_maps.shape[-1]/window_size)) # then divide by seq_len/window_size, i.e. the number of encodings we get from each negative sample.
-                        inds_for_classification.extend(train_neg_sample_inds[:min(num_negatives_to_add, len(train_neg_sample_inds))])
-
-                    train_mixed_data_maps_cv = train_mixed_data_maps_cv[inds_for_classification]
-                    train_mixed_labels_cv = train_mixed_labels_cv[inds_for_classification]
-                    '''
-                    print("TRAINING LINEAR CLASSIFIER")
-                    if encoder_type == 'CausalCNNEncoderNoDilationNoPruning':
-                        classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
-                        X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
-                        X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                        encoding_size=encoder.encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
-                        data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
-                    else:
-                        classifier, valid_auroc, valid_auprc, TEST_auroc, TEST_auprc = train_linear_classifier(X_train=train_mixed_data_maps_cv, y_train=train_mixed_labels_cv, 
-                        X_validation=validation_mixed_data_maps_cv, y_validation=validation_mixed_labels_cv, 
-                        X_TEST=TEST_mixed_data_maps, y_TEST=TEST_mixed_labels,
-                        encoding_size=encoder.pruned_encoding_size, batch_size=20, num_pre_positive_encodings=num_pre_positive_encodings, encoder=encoder, window_size=encoder_hyper_params['window_size'], return_models=True, return_scores=True, pos_sample_name=pos_sample_name, 
-                        data_type=data_type, classification_cv=classification_cv, encoder_cv=encoder_cv)
-
-                    classifier_validation_aurocs.append(valid_auroc)
-                    classifier_validation_auprcs.append(valid_auprc)
-                    classifier_TEST_aurocs.append(TEST_auroc)
-                    classifier_TEST_auprcs.append(TEST_auprc)
+                classifier_validation_aurocs.append(valid_auroc)
+                classifier_validation_auprcs.append(valid_auprc)
+                classifier_TEST_aurocs.append(TEST_auroc)
+                classifier_TEST_auprcs.append(TEST_auprc)
 
             
     print("CLASSIFICATION VALIDATION RESULT OVER CV")

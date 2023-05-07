@@ -1300,12 +1300,17 @@ class LinearClassifier(nn.Module):
 
 
 class RnnPredictor(torch.nn.Module):
-    def __init__(self, encoding_size, hidden_size, n_classes=1):
+    def __init__(self, encoding_size, hidden_size, n_classes=1,modelType="LSTM"):
         super(RnnPredictor, self).__init__()
         self.encoding_size = encoding_size
         self.hidden_size = hidden_size
         self.num_layers = 1
-        self.rnn = torch.nn.LSTM(input_size=encoding_size,  hidden_size=hidden_size, num_layers=self.num_layers, batch_first=True)
+        self.modelType = modelType
+        if modelType=="GRU":
+            self.rnn = torch.nn.GRU(input_size=encoding_size,  hidden_size=hidden_size, num_layers=self.num_layers, batch_first=True)
+        else:
+            self.rnn = torch.nn.LSTM(input_size=encoding_size,  hidden_size=hidden_size, num_layers=self.num_layers, batch_first=True)
+            
         if n_classes == 1:
             self.linear = torch.nn.Linear(hidden_size, n_classes)
         else:
@@ -1315,7 +1320,10 @@ class RnnPredictor(torch.nn.Module):
     def forward(self, x, return_full_seq=False):
         # x is of shape (num_samples, seq_len, num_features)
         # print(x.shape)
-        output, (h_n, _) = self.rnn(x)
+        if self.modelType == "GRU":
+            output, h_n = self.rnn(x)
+        else:
+            output, (h_n, _) = self.rnn(x)        
         preds = []
         for hidden_states in output:
             preds.append(self.linear(hidden_states).squeeze()) # of shape (seq_len, num_classes)
