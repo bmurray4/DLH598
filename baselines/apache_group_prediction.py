@@ -1,14 +1,14 @@
 import torch
 import random
-from tnc.models import RnnPredictor
-from baselines.triplet_loss import CausalCNNEncoder
+from models import RnnPredictor
+from triplet_loss import CausalCNNEncoder
 import numpy as np
 import os
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, classification_report
 from sklearn.metrics import roc_curve
-from tnc.models import CausalCNNEncoder
-from tnc.utils import detect_incr_loss
+from models import CausalCNNEncoder
+from utils import detect_incr_loss
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -206,7 +206,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
     print()
     
     
-
+    """
     # Plot Loss curves
     plt.figure()
     plt.plot(train_losses, label="Train")
@@ -214,7 +214,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
     plt.title("Loss")
     plt.legend()
     plt.savefig(os.path.join(plt_path, "%s_Classifier_loss_%d_%s.pdf"%(baseline_type, encoder_cv, classification_cv)))
-
+    """
     if return_models and return_scores:
         return (classifier, epoch_validation_auroc, epoch_validation_accuracy, epoch_TEST_auroc, epoch_TEST_accuracy)
     if return_models:
@@ -225,7 +225,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
 
 
 if __name__ == '__main__':
-    path = '../DONTCOMMITdata/hirid_numpy'
+    path = '../../gdrive/MyDrive/hirid_numpy'
     train_first_24_hrs_data_maps = torch.from_numpy(np.load(os.path.join(path, 'train_first_24_hrs_data_maps.npy')))
     TEST_first_24_hrs_data_maps = torch.from_numpy(np.load(os.path.join(path, 'TEST_first_24_hrs_data_maps.npy')))
 
@@ -318,7 +318,7 @@ if __name__ == '__main__':
         print(unique[i], ': ', apache_names[i], ': ', counts[i])
 
 
-    for baseline_type in ['trip', 'cpc', 'raw']:
+    for baseline_type in ['raw']:
         np.random.seed(1234)
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         if baseline_type=='raw':
@@ -360,7 +360,7 @@ if __name__ == '__main__':
             acc, auroc = train_linear_classifier(X_train=train_first_24_hrs_data_maps_cv[:n_train], y_train=train_Apache_Groups_cv[:n_train], 
                     X_validation=train_first_24_hrs_data_maps_cv[n_train:], y_validation=train_Apache_Groups_cv[n_train:], classification_cv=cv, 
                     X_TEST=TEST_first_24_hrs_data_maps_cv, y_TEST=TEST_Apache_Groups_cv, encoding_size=6, class_weights=class_weights,
-                    encoder=encoder, window_size=12, target_names=apache_names, encoder_cv=encoder_cv, ckpt_path='./ckpt', baseline_type=baseline_type, 
+                    encoder=encoder, window_size=12, target_names=apache_names, encoder_cv = cv, ckpt_path='./ckpt', baseline_type=baseline_type, 
                     return_scores=True, plt_path='./DONTCOMMITplots/HiRID_apache_classification', classifier_name='apache_classifier_%s'%baseline_type)
             all_acc.append(acc.item())
             all_auroc.append(auroc.item())
@@ -370,8 +370,4 @@ if __name__ == '__main__':
         print()
 
 
-
-
-
-
-
+    

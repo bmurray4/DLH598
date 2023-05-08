@@ -243,6 +243,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         #plt.title('TEST ROC Curve')
         #plt.savefig(os.path.join(plt_path, 'TEST_ROC_curve_%d_%s.pdf'%(classification_cv, baseline_type)))
 
+        """
         # Plot Loss curves
         plt.figure()
         plt.plot(train_losses, label="Train")
@@ -250,6 +251,7 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         plt.title("Loss")
         plt.legend()
         plt.savefig(os.path.join(plt_path, "Classifier_loss_%d_%s.pdf"%(classification_cv, baseline_type)))
+        """
 
     print('Final TEST results:')
     print('AUC: ', np.mean(cv_aurocs), ' +- ', np.std(cv_aurocs))
@@ -263,6 +265,10 @@ def train_linear_classifier(X_train, y_train, X_validation, y_validation, X_TEST
         return epoch_TEST_accuracy, epoch_TEST_auroc
 
 if __name__ == '__main__':
+
+    if not os.path.exists('./ckpt'):
+        os.makedirs('./ckpt')
+
     parser = argparse.ArgumentParser(description='Run circulatory failure prediction')
     parser.add_argument('--encoder_type', type=str, default=None)
     parser.add_argument('--checkpoint_file', type=str, default=None)
@@ -415,7 +421,7 @@ if __name__ == '__main__':
                             X_validation=train_circulatory_data_maps, y_validation=y_train,
                             X_TEST=TEST_circulatory_data_maps, y_TEST=y_TEST, 
                             classifier_input_size=classifier_input_size, baseline_type=encoder_type, encoder=encoder, window_size=12, 
-                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='../ckpt', 
+                            target_names=['Normal', 'Circulatory Failure'], encoder_cv=encoder_cv, ckpt_path='./ckpt', 
                             plt_path='tnc/DONTCOMMITplots/HiRID_circulatory_classification', 
                             classifier_name='circulatory_classifier', class_weights=class_weights, return_models=True, data_type='HiRID',classifierModel=classifierModel)
     print('Finished training classifier')

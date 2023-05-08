@@ -54,17 +54,17 @@ def main(data_type, lr,  cv):
 
         # NOTE THE MAP CHANNEL HAS 1'S FOR OBSERVED VALUES, 0'S FOR MISSING VALUES
         # data_maps arrays are of shape (num_samples, 2, 18, 1152). 4 days of data per sample
-        TEST_mixed_data_maps = torch.from_numpy(np.load(os.path.join(path, 'TEST_data_maps.npy'))).float()
+        TEST_mixed_data_maps = torch.from_numpy(np.load(os.path.join(path, 'TEST_mortality_data_maps.npy'))).float()
         TEST_mixed_mortality_labels = torch.from_numpy(np.load(os.path.join(path, 'TEST_mortality_labels.npy'))).float()
         TEST_mixed_labels = TEST_mixed_mortality_labels
-        TEST_PIDs = torch.from_numpy(np.load(os.path.join(path, 'TEST_PIDs.npy'))).float()
+        TEST_PIDs = torch.from_numpy(np.load(os.path.join(path, 'TEST_first_24_hrs_PIDs.npy'))).float()
         TEST_Apache_Groups = torch.from_numpy(np.load(os.path.join(path, 'TEST_Apache_Groups.npy'))).float()
 
 
-        train_mixed_data_maps = torch.from_numpy(np.load(os.path.join(path, 'train_data_maps.npy'))).float()
+        train_mixed_data_maps = torch.from_numpy(np.load(os.path.join(path, 'train_mortality_data_maps.npy'))).float()
         train_mixed_mortality_labels = torch.from_numpy(np.load(os.path.join(path, 'train_mortality_labels.npy'))).float()
         train_mixed_labels = train_mixed_mortality_labels
-        train_PIDs = torch.from_numpy(np.load(os.path.join(path, 'train_PIDs.npy'))).float()
+        train_PIDs = torch.from_numpy(np.load(os.path.join(path, 'train_first_24_hrs_PIDs.npy'))).float()
         train_Apache_Groups = torch.from_numpy(np.load(os.path.join(path, 'train_Apache_Groups.npy'))).float()
 
         # Apache groups are either apache 2 or apache 4 codes. We consolodate into a single set of codes
