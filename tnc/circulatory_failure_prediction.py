@@ -281,7 +281,7 @@ if __name__ == '__main__':
     print('Cutting off last 3 hrs of data')
     truncate_amt = 36
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    data_path = '../gdrive/MyDrive/hirid_numpy'
+    data_path = '../../gdrive/MyDrive/hirid_numpy'
     train_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'train_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
     TEST_circulatory_data_maps = torch.from_numpy(np.load(os.path.join(data_path, 'TEST_circulatory_data_maps.npy')))[:, :, :, :-truncate_amt].float()
 
@@ -426,6 +426,7 @@ if __name__ == '__main__':
                             classifier_name='circulatory_classifier', class_weights=class_weights, return_models=True, data_type='HiRID',classifierModel=classifierModel)
     print('Finished training classifier')
     print("Current Time ", datetime.now())
+    """
     if plot_heatmap:
         signal_list = ['Heart rate', 'Systolic BP', 'Diastolic BP', 'MAP', 'Cardiac output', 'SpO2', 'RASS',
                     'peak inspiratory pressure (ventilator)', 'Arterial Lactate', 'Lactate venous', 'INR',
@@ -454,7 +455,7 @@ if __name__ == '__main__':
             # risk_x_axis_label='Hours until circulatory failure', truncate_amt=truncate_amt)
             
             # plot_pca_trajectory(encodings=encodings.detach().cpu(), path='tnc/DONTCOMMITplots/HiRID_circulatory_classification', pca_file_name='trajectory%d.pdf'%ind, pos_sample_name='circulatory failure')
-
+    """
 
 
 
